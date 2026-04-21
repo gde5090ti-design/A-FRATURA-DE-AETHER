@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Fratura de Aether — Servidor RP</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --gold-dim: #7a6130;
+    --aether: #7b4de8;
+    --aether-light: #a87ef0;
+    --aether-glow: rgba(123,77,232,0.35);
+    --dark: #06040e;
+    --dark2: #0d0a1a;
+    --dark3: #130f22;
+    --smoke: #1e1830;
+    --text: #d4c9a8;
+    --text-dim: #8a7d60;
+    --red: #c04040;
+    --red-glow: rgba(192,64,64,0.3);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'EB Garamond', serif;
+    font-size: 18px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE OVERLAY ─── */
+  body::before {
+    content:'';
+    position:fixed; inset:0; z-index:0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events:none;
+  }
+
+  /* ─── HERO ─── */
+  #hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    overflow: hidden;
+    padding: 2rem;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 1;
+    background-image: url('https://images.hdqwalls.com/wallpapers/ancient-cathedral-ruins-hd.jpg');
+    background-size: cover;
+    background-position: center top;
+    filter: brightness(0.22) saturate(0.6);
+  }
+
+  .hero-overlay {
+    position: absolute; inset:0; z-index:2;
+    background: radial-gradient(ellipse at 50% 80%, var(--aether-glow) 0%, transparent 65%),
+                linear-gradient(to top, var(--dark) 0%, transparent 40%);
+  }
+
+  .hero-content {
+    position: relative; z-index:3;
+    max-width: 900px;
+  }
+
+  .server-tag {
+    display: inline-block;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold-dim);
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+    padding: 0.4em 1.4em;
+    margin-bottom: 2rem;
+    animation: fadeUp 1s ease both;
+  }
+
+  .hero-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(2.8rem, 7vw, 6rem);
+    font-weight: 900;
+    line-height: 1.05;
+    color: var(--gold-light);
+    text-shadow: 0 0 60px rgba(201,168,76,0.4), 0 0 120px rgba(123,77,232,0.2);
+    animation: fadeUp 1s 0.2s ease both;
+    margin-bottom: 0.3rem;
+  }
+
+  .hero-subtitle {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    color: var(--aether-light);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    animation: fadeUp 1s 0.4s ease both;
+    margin-bottom: 2rem;
+  }
+
+  .hero-quote {
+    font-style: italic;
+    font-size: 1.1rem;
+    color: var(--text-dim);
+    border-left: 2px solid var(--gold-dim);
+    padding-left: 1.2rem;
+    text-align: left;
+    max-width: 560px;
+    margin: 0 auto 3rem;
+    animation: fadeUp 1s 0.6s ease both;
+  }
+
+  .hero-cta {
+    display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+    animation: fadeUp 1s 0.8s ease both;
+  }
+
+  .btn {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0.9em 2.4em;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+    color: var(--dark);
+  }
+  .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(201,168,76,0.3); }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+  }
+  .btn-ghost:hover { background: rgba(201,168,76,0.08); transform: translateY(-2px); }
+
+  .scroll-indicator {
+    position: absolute; bottom: 2rem; left:50%; transform:translateX(-50%);
+    z-index:3;
+    display:flex; flex-direction:column; align-items:center; gap:0.5rem;
+    color: var(--gold-dim); font-family:'Cinzel',serif; font-size:0.6rem; letter-spacing:0.3em;
+    animation: pulse 2s infinite;
+  }
+  .scroll-indicator svg { width:20px; }
+
+  /* ─── NAV ─── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(6,4,14,0.9);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(201,168,76,0.15);
+    padding: 0.9rem 2rem;
+    display: flex; align-items:center; justify-content: center; gap: 0;
+  }
+
+  nav a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 0.5rem 1.2rem;
+    border-right: 1px solid rgba(201,168,76,0.1);
+    transition: color 0.3s;
+  }
+  nav a:first-child { border-left: 1px solid rgba(201,168,76,0.1); }
+  nav a:hover { color: var(--gold); }
+
+  /* ─── SECTIONS ─── */
+  section {
+    position: relative; z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 6rem 2rem;
+  }
+
+  .section-full {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  .section-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.5em;
+    text-transform: uppercase;
+    color: var(--aether-light);
+    margin-bottom: 0.8rem;
+  }
+
+  .section-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    color: var(--gold-light);
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 40px rgba(201,168,76,0.2);
+  }
+
+  .divider {
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+    margin: 0 auto 3rem;
+  }
+
+  .divider-left {
+    margin: 0 0 3rem;
+  }
+
+  /* ─── LORE ─── */
+  #lore { background: linear-gradient(to bottom, var(--dark), var(--dark2)); }
+
+  .lore-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .lore-image-wrap {
+    position: relative;
+  }
+
+  .lore-image-wrap img {
+    width: 100%;
+    height: 420px;
+    object-fit: cover;
+    display: block;
+    filter: brightness(0.7) saturate(0.8);
+    border: 1px solid rgba(201,168,76,0.2);
+  }
+
+  .lore-image-wrap::after {
+    content:'';
+    position:absolute; inset:0;
+    background: linear-gradient(135deg, var(--aether-glow), transparent 60%);
+    pointer-events:none;
+  }
+
+  .lore-frame {
+    position:absolute;
+    border: 1px solid var(--gold-dim);
+    inset: 12px;
+    pointer-events:none;
+    opacity: 0.4;
+  }
+
+  .lore-text p { margin-bottom: 1.2rem; color: var(--text); }
+
+  .highlight-box {
+    border-left: 3px solid var(--aether);
+    padding: 1rem 1.5rem;
+    background: rgba(123,77,232,0.06);
+    margin: 1.5rem 0;
+    font-style: italic;
+    color: var(--aether-light);
+  }
+
+  /* ─── REGULAMENTO ─── */
+  #regulamento {
+    background: var(--dark3);
+  }
+
+  .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+
+  .rule-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(201,168,76,0.12);
+    padding: 2rem;
+    position: relative;
+    transition: all 0.3s;
+    overflow: hidden;
+  }
+
+  .rule-card::before {
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:2px;
+    background: linear-gradient(to right, transparent, var(--gold-dim), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .rule-card:hover { border-color: rgba(201,168,76,0.35); transform: translateY(-3px); }
+  .rule-card:hover::before { opacity:1; }
+
+  .rule-card .icon {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .rule-card h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.8rem;
+  }
+
+  .rule-card p { color: var(--text-dim); font-size: 0.95rem; line-height: 1.6; }
+
+  /* ─── FACTIONS IMAGE BANNER ─── */
+  .banner-section {
+    position: relative;
+    z-index:1;
+    width: 100%;
+    height: 60vh;
+    overflow: hidden;
+  }
+
+  .banner-section img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    filter: brightness(0.3) saturate(0.5);
+  }
+
+  .banner-section .banner-overlay {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background: radial-gradient(ellipse at center, transparent 30%, var(--dark2) 100%);
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .banner-section .banner-overlay h2 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.5rem, 4vw, 3.5rem);
+    color: var(--gold-light);
+    text-shadow: 0 0 60px rgba(201,168,76,0.5);
+    margin-bottom: 1rem;
+  }
+
+  .banner-section .banner-overlay p {
+    font-style: italic;
+    color: var(--text-dim);
+    max-width: 600px;
+    font-size: 1.1rem;
+  }
+
+  /* ─── ECONOMIA ─── */
+  #economia { background: var(--dark2); }
+
+  .eco-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+
+  .eco-card {
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+    background: rgba(255,255,255,0.015);
+    border: 1px solid rgba(201,168,76,0.1);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+
+  .eco-card::after {
+    content:'';
+    position:absolute; inset:0;
+    background: radial-gradient(ellipse at 50% 110%, var(--aether-glow), transparent 70%);
+    opacity:0; transition: opacity 0.3s;
+  }
+
+  .eco-card:hover { border-color: rgba(123,77,232,0.4); }
+  .eco-card:hover::after { opacity:1; }
+
+  .eco-card .eco-icon { font-size: 2.5rem; margin-bottom: 1rem; display:block; }
+  .eco-card h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--aether-light);
+    margin-bottom: 0.8rem;
+  }
+  .eco-card p { color: var(--text-dim); font-size: 0.9rem; position:relative; z-index:1; }
+
+  .coin-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05));
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 1.8rem;
+    padding: 1rem 2.5rem;
+    margin: 2rem 0;
+    letter-spacing: 0.1em;
+  }
+
+  /* ─── MAPA ─── */
+  #mapa { background: var(--dark3); }
+
+  .mapa-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 4rem;
+    align-items: start;
+  }
+
+  .zone-list { display: flex; flex-direction: column; gap: 1rem; margin-top:2rem; }
+
+  .zone-item {
+    display: flex; align-items: flex-start; gap: 1rem;
+    padding: 1.2rem 1.5rem;
+    border: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.015);
+    transition: all 0.3s;
+  }
+
+  .zone-item:hover { border-color: rgba(201,168,76,0.2); }
+
+  .zone-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 0.35rem;
+  }
+
+  .zone-item h4 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.3rem;
+  }
+
+  .zone-item p { color: var(--text-dim); font-size: 0.9rem; }
+
+  .mapa-image-wrap { position: relative; }
+  .mapa-image-wrap img {
+    width: 100%;
+    height: 500px;
+    object-fit: cover;
+    filter: brightness(0.55) saturate(0.7) hue-rotate(10deg);
+    border: 1px solid rgba(201,168,76,0.15);
+  }
+
+  /* ─── CONFLICTS ─── */
+  .conflict-banner {
+    position: relative; z-index:1;
+    background: var(--dark2);
+    padding: 5rem 2rem;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .conflict-banner::before {
+    content:'';
+    position:absolute; inset:0;
+    background: radial-gradient(ellipse at 50% 50%, var(--red-glow), transparent 70%);
+  }
+
+  .conflict-inner { position: relative; z-index:1; max-width:700px; margin: 0 auto; }
+
+  .conflict-inner h2 {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(1.5rem,4vw,2.8rem);
+    color: #e08080;
+    text-shadow: 0 0 40px rgba(192,64,64,0.5);
+    margin-bottom: 1.5rem;
+  }
+
+  .conflict-rules {
+    display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;
+    margin-top: 2rem;
+  }
+
+  .conflict-pill {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.5em 1.2em;
+    border: 1px solid rgba(192,64,64,0.35);
+    color: #e08080;
+    background: rgba(192,64,64,0.06);
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    position: relative; z-index:1;
+    background: var(--dark);
+    border-top: 1px solid rgba(201,168,76,0.1);
+    padding: 3rem 2rem;
+    text-align: center;
+  }
+
+  footer .footer-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 1.5rem;
+    color: var(--gold-dim);
+    margin-bottom: 0.5rem;
+  }
+
+  footer p { color: var(--text-dim); font-size: 0.9rem; }
+
+  footer .final-quote {
+    font-style: italic;
+    color: var(--aether-light);
+    margin: 2rem auto;
+    max-width: 500px;
+    font-size: 1rem;
+    border-top: 1px solid rgba(123,77,232,0.2);
+    border-bottom: 1px solid rgba(123,77,232,0.2);
+    padding: 1.2rem;
+  }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(30px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity:0.4; }
+    50% { opacity:1; }
+  }
+
+  @keyframes aetherPulse {
+    0%,100% { box-shadow: 0 0 20px var(--aether-glow); }
+    50% { box-shadow: 0 0 60px var(--aether-glow), 0 0 100px rgba(123,77,232,0.1); }
+  }
+
+  /* Reveal on scroll */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 768px) {
+    .lore-grid, .mapa-grid, .eco-grid { grid-template-columns: 1fr; }
+    .eco-grid { grid-template-columns: 1fr 1fr; }
+    nav { flex-wrap: wrap; gap: 0.2rem; }
+    nav a { font-size: 0.6rem; padding: 0.4rem 0.6rem; }
+  }
+  @media (max-width: 480px) {
+    .eco-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section id="inicio" style="max-width:100%; padding:0;">
+  <div id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="server-tag">Servidor Minecraft RP · All The Mods 10</div>
+      <h1 class="hero-title">A Fratura<br>de Aether</h1>
+      <p class="hero-subtitle">O mundo foi quebrado. Reconstrua-o.</p>
+      <blockquote class="hero-quote">
+        "Antes de tudo, existia apenas o Aether — uma força primordial que mantinha o equilíbrio entre todas as coisas. Mas perfeição não gera progresso."
+      </blockquote>
+      <div class="hero-cta">
+        <a href="#lore" class="btn btn-gold">Conhecer o Lore</a>
+        <a href="#regulamento" class="btn btn-ghost">Ver Regulamento</a>
+      </div>
+    </div>
+    <div class="scroll-indicator">
+      <span>Role para explorar</span>
+      <svg viewBox="0 0 20 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="18" height="28" rx="9" stroke="currentColor" stroke-width="1.5"/>
+        <circle cx="10" cy="8" r="2.5" fill="currentColor"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- NAV -->
+<nav>
+  <a href="#lore">Lore</a>
+  <a href="#regulamento">Regulamento</a>
+  <a href="#economia">Economia</a>
+  <a href="#mapa">Mapa</a>
+  <a href="#conflitos">Conflitos</a>
+</nav>
+
+<!-- LORE -->
+<section id="lore">
+  <div class="lore-grid">
+    <div class="lore-image-wrap reveal">
+      <img src="https://png.pngtree.com/png-clipart/20231024/original/pngtree-pevensey-castle-ruinskentvintage-engraving-ruins-photo-png-image_13419528.png" alt="Ruínas da Era Precursora">
+      <div class="lore-frame"></div>
+    </div>
+    <div class="lore-text reveal">
+      <p class="section-label">— Origem do Mundo</p>
+      <h2 class="section-title">A Fratura</h2>
+      <div class="divider divider-left"></div>
+      <p>Uma civilização antiga, conhecida apenas como <strong style="color:var(--gold)">Os Precursores</strong>, buscava ir além dos limites naturais. Eles não aceitavam o equilíbrio. Queriam controle absoluto.</p>
+      <p>Unindo tecnologia avançada e magia proibida, criaram um experimento capaz de manipular o próprio Aether. O resultado foi uma catástrofe — o mundo foi <strong style="color:var(--aether-light)">quebrado</strong>.</p>
+      <div class="highlight-box">
+        "A Fratura dividiu o mundo em múltiplos fragmentos de realidade, cada um com propriedades únicas — regiões onde a magia domina completamente, terras onde apenas a tecnologia funciona, áreas instáveis onde as leis da física não são constantes."
+      </div>
+      <p>Muito tempo depois, novas civilizações surgiram. Vocês — os herdeiros da Fratura. Cada grupo descobriu uma afinidade natural com um tipo de poder. Mas ninguém consegue dominar tudo. O mundo não permite.</p>
+    </div>
+  </div>
+</section>
+
+<!-- BANNER -->
+<div class="banner-section section-full">
+  <img src="https://thumbs.dreamstime.com/z/cavalo-de-cavaleiro-herdeiro-medieval-com-escudo-her%C3%A1ldico-conjunto-desenho-do-vetor-preto-e-branco-her%C3%B3i-fantasia-estilo-229548324.jpg?w=576" alt="Fações em conflito">
+  <div class="banner-overlay">
+    <h2>Os Herdeiros da Fratura</h2>
+    <p>Facções se erguem das cinzas. Cada uma com sua filosofia, seus segredos e sua ambição. O destino do mundo repousa em suas mãos.</p>
+  </div>
+</div>
+
+<!-- REGULAMENTO -->
+<section id="regulamento" style="background:var(--dark3); max-width:100%; padding: 6rem 2rem;">
+  <div style="max-width:1100px; margin:0 auto;">
+    <div style="text-align:center;" class="reveal">
+      <p class="section-label">— As Leis do Mundo</p>
+      <h2 class="section-title">Regulamento Oficial</h2>
+      <div class="divider"></div>
+    </div>
+
+    <div class="rules-grid">
+
+      <div class="rule-card reveal">
+        <span class="icon">🏰</span>
+        <h3>Sistema de Facções (Trios)</h3>
+        <p>Cada facção é formada por exatamente <strong style="color:var(--gold)">3 jogadores</strong>. Todo trio deve possuir nome, tema visual, identidade e um líder. Trocas de membros exigem aprovação interna.</p>
+      </div>
+
+      <div class="rule-card reveal">
+        <span class="icon">⚙️</span>
+        <h3>Mods Exclusivos</h3>
+        <p>Cada trio escolhe <strong style="color:var(--gold)">1 mod principal exclusivo</strong>. Outros trios só podem acessá-lo via comércio, acordos formais ou conflitos — nunca diretamente.</p>
+      </div>
+
+      <div class="rule-card reveal">
+        <span class="icon">🗺️</span>
+        <h3>Territórios</h3>
+        <p>Cada facção reivindica e defende seu território. Expansão é possível por construção, acordos ou guerra. <strong style="color:var(--red)">Invasão sem justificativa RP é proibida.</strong></p>
+      </div>
+
+      <div class="rule-card reveal">
+        <span class="icon">🎭</span>
+        <h3>Roleplay Obrigatório</h3>
+        <p>Todos devem interpretar um personagem, usar nome de personagem no RP e manter coerência. Chat separado entre IC (in-character) e OOC (out-of-character).</p>
+      </div>
+
+      <div class="rule-card reveal">
+        <span class="icon">⚖️</span>
+        <h3>Leis e Justiça</h3>
+        <p>Crimes incluem assassinato sem motivo, invasão e sabotagem. Penalidades: multas, prisão RP e perda de recursos. Um tribunal pode ser estabelecido entre facções.</p>
+      </div>
+
+      <div class="rule-card reveal">
+        <span class="icon">🚫</span>
+        <h3>Proibições Gerais</h3>
+        <p>Griefing sem RP, exploits, hacks, X-ray e quebrar personagem são proibidos. <strong style="color:var(--gold)">Toda ação deve ter consequência.</strong></p>
+      </div>
+
+    </div>
+
+    <div style="text-align:center; margin-top:3rem;" class="reveal">
+      <div style="display:inline-block; border: 1px solid rgba(201,168,76,0.3); padding: 1.5rem 3rem; background: rgba(201,168,76,0.04);">
+        <p style="font-family:'Cinzel',serif; font-size:0.8rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--gold-dim); margin-bottom:0.5rem;">Regra Fundamental</p>
+        <p style="font-size:1.2rem; font-style:italic; color:var(--gold-light);">"Toda ação deve ter consequência."</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ECONOMIA -->
+<section id="economia">
+  <div style="text-align:center;" class="reveal">
+    <p class="section-label">— Comércio & Poder</p>
+    <h2 class="section-title">Sistema Econômico</h2>
+    <div class="divider"></div>
+    <p style="max-width:600px; margin:0 auto 1rem; color:var(--text-dim);">A economia foi projetada para criar dependência entre facções, incentivar comércio e gerar conflitos naturais. Nenhuma facção pode ser autossuficiente.</p>
+    <div class="coin-tag">⬡ Aether Coin (ÆC)</div>
+  </div>
+
+  <div class="eco-grid">
+    <div class="eco-card reveal">
+      <span class="eco-icon">🏪</span>
+      <h3>Mercado Livre</h3>
+      <p>Jogadores definem preços livremente. Negociação direta, comércio de itens, serviços e contratos entre facções.</p>
+    </div>
+    <div class="eco-card reveal">
+      <span class="eco-icon">📜</span>
+      <h3>Contratos</h3>
+      <p>Produção sob demanda, serviços especializados, segurança, transporte e espionagem. Quebra gera multas, guerras ou perda de reputação.</p>
+    </div>
+    <div class="eco-card reveal">
+      <span class="eco-icon">🏆</span>
+      <h3>Reputação</h3>
+      <p>Alta reputação atrai mais negócios. Baixa reputação leva ao isolamento econômico. O nome de sua facção é seu maior ativo.</p>
+    </div>
+    <div class="eco-card reveal">
+      <span class="eco-icon">🧾</span>
+      <h3>Impostos</h3>
+      <p>Imposto de território, taxa de comércio e taxa de proteção. Evitam acúmulo excessivo de riqueza e mantêm o equilíbrio.</p>
+    </div>
+    <div class="eco-card reveal">
+      <span class="eco-icon">⚗️</span>
+      <h3>Especialização</h3>
+      <p>Tecnologia produz máquinas. Magia cria encantamentos. Agricultura fornece comida. Ninguém produz tudo — todos dependem de todos.</p>
+    </div>
+    <div class="eco-card reveal">
+      <span class="eco-icon">⚠️</span>
+      <h3>Crimes Econômicos</h3>
+      <p>Golpes, não pagamento de contratos e manipulação de preços são crimes. Penalidades incluem multas, confisco e prisão RP.</p>
+    </div>
+  </div>
+
+  <div class="reveal" style="margin-top:3rem; text-align:center; padding:2rem; border: 1px solid rgba(123,77,232,0.2); background: rgba(123,77,232,0.04);">
+    <p style="font-family:'Cinzel',serif; letter-spacing:0.05em; font-size:1.1rem; color:var(--aether-light); font-style:italic;">
+      "Quem controla recursos, controla o mundo… mas nunca sozinho."
+    </p>
+  </div>
+</section>
+
+<!-- MAPA -->
+<section id="mapa" style="background:var(--dark3); max-width:100%; padding:6rem 2rem;">
+  <div style="max-width:1100px; margin:0 auto;">
+    <div class="mapa-grid">
+      <div class="reveal">
+        <p class="section-label">— Territórios & Rotas</p>
+        <h2 class="section-title">Mapa Político</h2>
+        <div class="divider divider-left"></div>
+        <p style="color:var(--text-dim); margin-bottom:1.5rem;">Após a Fratura de Aether, o mundo é dividido em regiões naturais únicas que definem recursos, estratégia e tipo de poder dominante.</p>
+
+        <div class="zone-list">
+          <div class="zone-item">
+            <div class="zone-dot" style="background:#a0c8a0;"></div>
+            <div>
+              <h4>⚖️ Zona Central (Neutra)</h4>
+              <p>Área segura. Ponto de encontro global. PvP proibido. Mercado principal e eventos diplomáticos.</p>
+            </div>
+          </div>
+          <div class="zone-item">
+            <div class="zone-dot" style="background:var(--red);"></div>
+            <div>
+              <h4>🔴 Zonas de Guerra</h4>
+              <p>PvP liberado. Recursos valiosos. Alto risco, alta recompensa.</p>
+            </div>
+          </div>
+          <div class="zone-item">
+            <div class="zone-dot" style="background:#c0a840;"></div>
+            <div>
+              <h4>🟡 Zonas Disputadas</h4>
+              <p>Controle indefinido. Território em constante disputa entre facções.</p>
+            </div>
+          </div>
+          <div class="zone-item">
+            <div class="zone-dot" style="background:var(--aether);"></div>
+            <div>
+              <h4>🛣️ Rotas Comerciais</h4>
+              <p>Caminhos naturais entre regiões. Facções podem controlar, cobrar taxas ou proteger caravanas.</p>
+            </div>
+          </div>
+          <div class="zone-item">
+            <div class="zone-dot" style="background:#808080;"></div>
+            <div>
+              <h4>🏛️ Pontos de Interesse</h4>
+              <p>Ruínas, dungeons, torres abandonadas e estruturas da lore espalhadas pelo mapa.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mapa-image-wrap reveal">
+        <img src="https://wallpapers.com/images/hd/mystic-ruins-cave-laxmonaut-art-zs8tq4bq9lrfmpzk.jpg" alt="Mapa do mundo fraturado">
+        <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, rgba(123,77,232,0.15), transparent 70%);"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:1.5rem;background:linear-gradient(to top, var(--dark3), transparent);">
+          <p style="font-family:'Cinzel',serif;font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold-dim);">
+            📌 "O lugar onde você vive define o poder que você terá."
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONFLITOS -->
+<div id="conflitos" class="conflict-banner">
+  <div class="conflict-inner reveal">
+    <h2>⚔️ Sistema de Conflitos</h2>
+    <p style="color:var(--text-dim); margin-bottom:1.5rem; font-size:1rem;">Guerras não são apenas possíveis — são inevitáveis. Mas toda guerra tem regras.</p>
+
+    <div class="conflict-rules">
+      <div class="conflict-pill">Declaração oficial obrigatória</div>
+      <div class="conflict-pill">Justificativa RP necessária</div>
+      <div class="conflict-pill">Horários definidos</div>
+      <div class="conflict-pill">Limite de destruição</div>
+      <div class="conflict-pill">Sem spawn kill</div>
+      <div class="conflict-pill">Conquista estratégica permitida</div>
+      <div class="conflict-pill">Saques controlados</div>
+      <div class="conflict-pill">Se morrer, está fora até o fim</div>
+    </div>
+
+    <div style="margin-top:3rem; border-top:1px solid rgba(192,64,64,0.2); padding-top:2rem;">
+      <p style="font-family:'Cinzel',serif; font-size:0.75rem; letter-spacing:0.3em; text-transform:uppercase; color:rgba(192,64,64,0.6); margin-bottom:1rem;">Alianças</p>
+      <p style="color:var(--text-dim);">Facções podem firmar alianças — possivelmente limitadas a <strong style="color:#e08080">1 aliança por vez</strong>. Quebra de contrato é permitida dentro do RP, mas deve gerar consequências. Confiança é rara. Traição faz parte do jogo.</p>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-title">A Fratura de Aether</div>
+  <p class="final-quote">"O mundo foi quebrado… e agora cabe a nós decidir o que será reconstruído."</p>
+  <p>Servidor Minecraft RP · All The Mods 10</p>
+  <p style="margin-top:0.5rem; font-size:0.8rem;">Respeite o RP. Respeite os jogadores. Construa algo memorável.</p>
+</footer>
+
+<script>
+  // Reveal on scroll
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  reveals.forEach(el => observer.observe(el));
+
+  // Stagger rule cards
+  document.querySelectorAll('.rule-card, .eco-card').forEach((el, i) => {
+    el.style.transitionDelay = `${i * 0.08}s`;
+  });
+</script>
+</body>
+</html>
